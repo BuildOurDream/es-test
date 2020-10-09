@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration scan="true" scanPeriod="120 seconds" debug="false">
+    <contextName>advertisement</contextName>
+
+    <!-- name的值是变量的名称，value的值时变量定义的值。通过定义的值会被插入到logger上下文中。定义后，可以使“${}”来使用变量。 -->
+    <property name="log.path" value="${user.dir}/logs"/>
+    <property name="fileName" value="adm-log"/>
+
+    <!--0. 日志格式和颜色渲染 -->
+    <!--本地可以加点颜色-->
+    <!--<springProfile name="dev">-->
+    <property name="CUSTOM_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %cyan([%t]) %highlight(%-5level) %boldMagenta(%-40.40logger{39}) - %boldWhite(%m%n)"/>
+    <!--</springProfile>-->
+
+    <!--测试环境和正式环境还是朴实一点 后面从服务器导出日志也好看一点-->
+    <!--<springProfile name="test,prod">-->
+    <!--<property name="CUSTOM_LOG_PATTERN"-->
+    <!--value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %-40.40logger{39} - %m%n"/>-->
+    <!--</springProfile>-->
+
+    <!--1. 输出到控制台-->
+    <appender name="consoleLog" class="ch.qos.logback.core.ConsoleAppender">
+        <!--此日志appender是为开发使用，只配置最底级别，控制台输出的日志级别是大于或等于此级别的日志信息-->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>debug</level>
+        </filter>
+        <encoder>
+            <Pattern>${CUSTOM_LOG_PATTERN}</Pattern>
+            <!-- 设置字符集 -->
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="errorLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+
+        <file>${user.dir}/logs/error/error.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${user.dir}/logs/error/history/error.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <charset>UTF-8</charset>
+            <Pattern>${CUSTOM_LOG_PATTERN}</Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="infoLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+
+        <file>${user.dir}/logs/info/info.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${user.dir}/logs/info/history/info.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <charset>UTF-8</charset>
+            <Pattern>${CUSTOM_LOG_PATTERN}</Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="businessLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+
+        <file>${user.dir}/logs/business/business.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${user.dir}/logs/business/history/business.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <charset>UTF-8</charset>
+            <Pattern>${CUSTOM_LOG_PATTERN}</Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="warnLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+
+        <file>${user.dir}/logs/warn/warn.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${user.dir}/logs/warn/history/warn.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <charset>UTF-8</charset>
+            <Pattern>${CUSTOM_LOG_PATTERN}</Pattern>
+        </encoder>
+    </appender>
+
+    <!-- 异步日志记录 -->
+    <appender name="async" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>1024</queueSize>
+        <!--实际负责写日志的appender,最多只能添加一个-->
+        <appender-ref ref="consoleLog"/>
+    </appender>
+
+    <logger name="io.lettuce.core.protocol" level="ERROR">
+        <appender-ref ref="errorLog"/>
+    </logger>
+
+    <logger name="info" level="INFO" additivity="false">
+        <appender-ref ref="infoLog"/>
+    </logger>
+
+    <logger name="error" level="ERROR" additivity="false">
+        <appender-ref ref="errorLog"/>
+    </logger>
+
+    <logger name="warn" level="WARN" additivity="false">
+        <appender-ref ref="warnLog"/>
+    </logger>
+
+    <logger name="business" level="DEBUG" additivity="false">
+        <appender-ref ref="businessLog"/>
+    </logger>
+
+    <!-- 开发环境只把日志打印到控制台 -->
+    <!--<springProfile name="dev">-->
+    <root level="info">
+        <appender-ref ref="consoleLog"/>
+    </root>
+    <!--</springProfile>-->
+
+    <!-- 测试环境、生产环境:输出到文档 -->
+    <springProfile name="test,prod">
+        <root level="info">
+            <appender-ref ref="async"/>
+            <appender-ref ref="infoLog"/>
+            <appender-ref ref="warnLog"/>
+            <appender-ref ref="errorLog"/>
+        </root>
+    </springProfile>
+
+</configuration>
