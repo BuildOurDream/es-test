@@ -51,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import test.es.exceptions.ClientException;
 
+import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.Map;
 
@@ -63,7 +64,7 @@ import java.util.Map;
 @Service
 public class EsService {
 
-    @Autowired
+    @Resource
     private RestHighLevelClient highLevelClient;
 
 
